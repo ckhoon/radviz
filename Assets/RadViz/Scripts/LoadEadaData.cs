@@ -12,7 +12,7 @@ public class LoadEadaData
 	static string LINE_SPLIT_RE = @"\r\n|\n\r|\n|\r"; // Define line delimiters, regular experession craziness
 	static char[] TRIM_CHARS = { '\"' };
 
-	private static int PERCENT = 10;
+	private static int PERCENT = 50;
 	private static float PERCENT_REC = 100 / PERCENT;
 
 	public static List<string> ReadHeader(string file, int colStart = 0)

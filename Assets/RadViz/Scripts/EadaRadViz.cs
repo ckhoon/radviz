@@ -16,30 +16,40 @@ public class EadaRadViz : MonoBehaviour {
 	public float ptScale;
 	public int explodeScale = 5;
 	public int spaceScale = 5;
+	public float LINE_WIDTH = 0.04f;
 
 
 	private List<Vector3> Anchors = new List<Vector3>();
 	private List<Vector3> oldAnchors = new List<Vector3>();
 
 	private Dictionary<string, Color> ListDataColor = new Dictionary<string, Color>{
-		{ "1", new Color(1, 0.1f, 0.1f) },
+		{ "1", new Color(1f, 0.1f, 0.1f) },
 		{ "2", new Color(0.1f, 1f, 0.1f) },
 		{ "4", new Color(0.1f, 0.1f, 1f) },
-		{ "3", new Color(0.9f, 0.1f, 0.5f) },
-		{ "5", new Color(0.5f, 0.9f, 0.1f) },
-		{ "6", new Color(0.1f, 0.5f, 0.9f) }
+		{ "3", new Color(1f, 0.05f, 0.85f) },
+		{ "5", new Color(0.85f, 0.05f, 1f) },
+		{ "6", new Color(0.05f, 0.85f, 1f) }
 	};
 
 	private static Color defaultColor = new Color(0.8f, 0.2f, 0.2f, 0.8f);
 
 	private Vector3 Origin;
 	private static int COL_NUM = 12;
-	private static float LINE_WIDTH = 0.08f;
+	//private static float LINE_WIDTH = 0.08f;
 
 	private List<string> colName;
 	private List<string> listDetails;
 	private List<string> listClassification;
 	private List<bool> listFilter;
+	private List<bool> listFilterAll = new List<bool>();
+	private List<bool> listFilterNone = new List<bool>();
+	private List<bool> listFilterParticipant = new List<bool>();
+	private List<bool> listFilterStaff = new List<bool>();
+	private List<bool> listFilterRevenue = new List<bool>();
+	private List<bool> listFilterMen = new List<bool>();
+	private List<bool> listFilterWomen = new List<bool>();
+	private List<bool> listFilterCoed = new List<bool>();
+	private List<bool> listFilterTotal = new List<bool>();
 	private List<List<float>> data;
 	private List<List<float>> dataNorm = new List<List<float>>();
 	private bool hideColor = true;
@@ -52,7 +62,20 @@ public class EadaRadViz : MonoBehaviour {
 		data = LoadEadaData.ReadData(inputfile, COL_NUM);
 		listDetails = LoadEadaData.ReadDetails(inputfile, 1);
 		listClassification = LoadEadaData.ReadDetails(inputfile, 10);
-		listFilter = LoadEadaData.ReadFilter(mapfile, 7);
+		listFilterParticipant = LoadEadaData.ReadFilter(mapfile, 7);
+		listFilterStaff = LoadEadaData.ReadFilter(mapfile, 8);
+		listFilterRevenue = LoadEadaData.ReadFilter(mapfile, 9);
+		listFilterMen = LoadEadaData.ReadFilter(mapfile, 10);
+		listFilterWomen = LoadEadaData.ReadFilter(mapfile, 11);
+		listFilterCoed = LoadEadaData.ReadFilter(mapfile, 12);
+		listFilterTotal = LoadEadaData.ReadFilter(mapfile, 13);
+
+		for ( int i = 0; i < colName.Count; i++ )
+		{
+			listFilterAll.Add(true);
+			listFilterNone.Add(false);
+		}
+		listFilter = listFilterAll;
 		normalise();
 
 		GameObject dataPoint = Instantiate(
@@ -60,6 +83,7 @@ public class EadaRadViz : MonoBehaviour {
 			Origin, Quaternion.identity
 		);
 		dataPoint.GetComponent<Renderer>().material.color = new Color(0, 0, 0);
+		dataPoint.transform.localScale = new Vector3(ptScale, ptScale, ptScale);
 
 		loadAnchors();
 		drawPoints();
@@ -157,6 +181,53 @@ public class EadaRadViz : MonoBehaviour {
 		}
 	}
 
+	public void LoadFilter(string menuTag)
+	{
+		switch ( menuTag ) {
+			case "all":
+				listFilter = listFilterAll;
+				break;
+			case "none":
+				listFilter = listFilterNone;
+				break;
+			case "participant":
+				listFilter = listFilterParticipant;
+				break;
+			case "staff":
+				listFilter = listFilterStaff;
+				break;
+			case "revenue":
+				listFilter = listFilterRevenue;
+				break;
+			case "men":
+				listFilter = listFilterMen;
+				break;
+			case "women":
+				listFilter = listFilterWomen;
+				break;
+			case "coed":
+				listFilter = listFilterCoed;
+				break;
+			case "total":
+				listFilter = listFilterTotal;
+				break;
+			default:
+				Debug.Log("should not be here");
+				break;
+		}
+		reloadAnchors();
+		redrawPoints();
+	}
+
+	public void ToggleFilter(int index)
+	{
+		Debug.Log("index - " + index);
+		listFilter[index] = !listFilter[index];
+		reloadAnchors();
+		redrawPoints();
+	}
+
+
 	private void loadAnchors()
 	{
 		generateAnchors();
@@ -186,6 +257,25 @@ public class EadaRadViz : MonoBehaviour {
 		}
 	}
 
+	private void reloadAnchors()
+	{
+		GameObject[] anchorPts = GameObject.FindGameObjectsWithTag("AnchorPoint");
+
+		for(int i =0; i<anchorPts.Length; i++ )
+		{
+			Color c =  anchorPts[i].GetComponentInChildren<Renderer>().material.color;
+			if ( !listFilter[i] )
+			{
+				c.a = 0.1f;
+			}
+			else
+			{
+				c.a = 0.8f;
+			}
+			anchorPts[i].GetComponentInChildren<Renderer>().material.color = c;
+		}
+	}
+
 	private void generateAnchors()
 	{
 		float x = 0;
@@ -194,44 +284,44 @@ public class EadaRadViz : MonoBehaviour {
 
 		x = 0f;
 		y = 0;
-		for ( int row = 0; row < 7; row++ )
-		{
-			z = 0;
-			for ( int col = 0; col < 8; col++ )
-			{
-				Vector3 v = new Vector3(x * spaceScale, y * spaceScale, z * spaceScale);
-				Anchors.Add(v);
-				z += 0.125f;
-			}
-			y += 0.167f;
-		}
-
-		z = 1;
-		y = 0;
-		for ( int row = 0; row < 7; row++ )
-		{
-			x = 0f;
-			for ( int col = 0; col < 8; col++ )
-			{
-				Vector3 v = new Vector3(x * spaceScale, y * spaceScale, z * spaceScale);
-				Anchors.Add(v);
-				x += 0.125f;
-			}
-			y += 0.167f;
-		}
-
-		x = 1f;
-		y = 0;
-		for ( int row = 0; row < 7; row++ )
+		for ( int row = 0; row < 6; row++ )
 		{
 			z = 0;
 			for ( int col = 0; col < 9; col++ )
 			{
 				Vector3 v = new Vector3(x * spaceScale, y * spaceScale, z * spaceScale);
 				Anchors.Add(v);
-				z += 0.125f;
+				z += 0.112f;
 			}
-			y += 0.167f;
+			y += 0.2f;
+		}
+
+		z = 1;
+		y = 0;
+		for ( int row = 0; row < 6; row++ )
+		{
+			x = 0f;
+			for ( int col = 0; col < 9; col++ )
+			{
+				Vector3 v = new Vector3(x * spaceScale, y * spaceScale, z * spaceScale);
+				Anchors.Add(v);
+				x += 0.112f;
+			}
+			y += 0.2f;
+		}
+
+		x = 1f;
+		y = 0;
+		for ( int row = 0; row < 6; row++ )
+		{
+			z = 0;
+			for ( int col = 0; col < 9; col++ )
+			{
+				Vector3 v = new Vector3(x * spaceScale, y * spaceScale, z * spaceScale);
+				Anchors.Add(v);
+				z += 0.112f;
+			}
+			y += 0.2f;
 		}
 	}
 
@@ -257,8 +347,11 @@ public class EadaRadViz : MonoBehaviour {
 					nPos++;
 				}
 			}
-			pos /= nPos;
-			pos *= explodeScale;
+			if ( nPos > 0 )
+			{
+				pos /= nPos;
+				pos *= explodeScale;
+			}
 			pos += Origin;
 			GameObject dataPoint = Instantiate(
 				PointPrefab,
@@ -295,8 +388,11 @@ public class EadaRadViz : MonoBehaviour {
 					nPos++;
 				}
 			}
-			pos /= nPos;
-			pos *= explodeScale;
+			if ( nPos > 0 )
+			{
+				pos /= nPos;
+				pos *= explodeScale;
+			}
 			pos += Origin;
 			PointsHolder.transform.GetChild(i).transform.position = pos;
 		}
