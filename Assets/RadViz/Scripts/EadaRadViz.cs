@@ -9,10 +9,12 @@ public class EadaRadViz : MonoBehaviour {
 	public GameObject PointPrefab2015;
 	public GameObject AnchorPrefab;
 	public GameObject LinePrefab;
+	public GameObject YearLinePrefab;
 	public GameObject PointsHolder;
 	public GameObject PointsHolder2015;
 	public GameObject AnchorsHolder;
 	public GameObject LinesHolder;
+	public GameObject YearLinksHolder;
 	public GameObject OriginPt;
 
 	public string inputfile;
@@ -102,6 +104,7 @@ public class EadaRadViz : MonoBehaviour {
 		loadAnchors();
 		drawPoints();
 		drawPoints(dataNorm2015, PointsHolder2015, PointPrefab2015, listDetails2015, listClassification2015);
+		DrawYearLinks();
 	}
 
 	// Update is called once per frame
@@ -133,6 +136,7 @@ public class EadaRadViz : MonoBehaviour {
 				redrawPoints();
 			if ( PointsHolder2015.activeSelf )
 				redrawPoints(dataNorm2015, PointsHolder2015);
+			DrawYearLinks();
 		}
 	}
 
@@ -249,6 +253,42 @@ public class EadaRadViz : MonoBehaviour {
 		for ( int i = LinesHolder.transform.childCount - 1; i >= 0; i-- )
 		{
 			Destroy(LinesHolder.transform.GetChild(i).gameObject);
+		}
+	}
+
+	public void DrawYearLinks()
+	{
+		for ( int i = YearLinksHolder.transform.childCount - 1; i >= 0; i-- )
+		{
+			Destroy(YearLinksHolder.transform.GetChild(i).gameObject);
+		}
+
+		if ( !PointsHolder.activeSelf || !PointsHolder2015.activeSelf )
+		{
+			return;
+		}
+
+		int lastJ = 0;
+
+		for ( int i = 0; i < listDetails.Count; i++ )
+		{
+			for ( int j = lastJ; j < listDetails2015.Count; j++ )
+			{
+				if ( listDetails[i].Equals(listDetails2015[j]) )
+				{
+					//Debug.Log(listDetails[i] + " -- " + listDetails2015[j] + " *** " + i + " <-> " + j);
+					GameObject link = Instantiate(
+						YearLinePrefab,
+						Vector3.zero,
+						Quaternion.identity
+					);
+					link.GetComponent<LineRenderer>().SetPosition(0, PointsHolder.transform.GetChild(i).transform.position);
+					link.GetComponent<LineRenderer>().SetPosition(1, PointsHolder2015.transform.GetChild(j).transform.position);
+					link.transform.parent = YearLinksHolder.transform;
+					lastJ = j;
+					break;
+				}
+			}
 		}
 	}
 
@@ -381,6 +421,7 @@ public class EadaRadViz : MonoBehaviour {
 			redrawPoints();
 		if ( PointsHolder2015.activeSelf )
 			redrawPoints(dataNorm2015, PointsHolder2015);
+		DrawYearLinks();
 	}
 
 	public void ToggleFilter(int index)
@@ -392,6 +433,7 @@ public class EadaRadViz : MonoBehaviour {
 			redrawPoints();
 		if ( PointsHolder2015.activeSelf )
 			redrawPoints(dataNorm2015, PointsHolder2015);
+		DrawYearLinks();
 	}
 
 
