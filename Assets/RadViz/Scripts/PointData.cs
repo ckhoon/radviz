@@ -15,5 +15,8 @@ public class PointData : MonoBehaviour {
 	{
 		get; set;
 	}
-
+	public List<List<float>> fData
+	{
+		get; set;
+	}
 }

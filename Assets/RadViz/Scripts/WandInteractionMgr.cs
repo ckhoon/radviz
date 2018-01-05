@@ -12,6 +12,8 @@ public class WandInteractionMgr : MonoBehaviour {
 	public Avpl.InputKey button_select;
 	public Avpl.InputKey button_menu;
 	public Avpl.InputKey key_hideColor;
+	public Avpl.InputKey key_scaleUp;
+	public Avpl.InputKey key_scaleDown;
 	public GameObject plotter;
 	public GameObject plotterEada;
 	public GameObject MenuCanvas;
@@ -135,7 +137,7 @@ public class WandInteractionMgr : MonoBehaviour {
 					}
 				}
 
-				if ( hit.collider.gameObject.tag == "AnchorPoint" )
+				if ( hit.collider.gameObject.tag == "AnchorPoint" || hit.collider.gameObject.tag == "OriginPoint" )
 				{
 					hitObject = hit.collider.gameObject;
 					btnPressed = 0;
@@ -148,7 +150,10 @@ public class WandInteractionMgr : MonoBehaviour {
 					txtDetailCanvas.transform.position = Avpl.AvplStatic.GetRay().origin + Avpl.AvplStatic.GetRay().direction * 0.5f;
 					txtDetails.text = hit.collider.gameObject.GetComponentInChildren<PointData>().details;
 					if ( plotterEada.activeSelf )
-						plotterEada.GetComponent<EadaRadViz>().DrawLinks(hit.collider.gameObject.GetComponentInChildren<PointData>().index);
+					{
+						//plotterEada.GetComponent<EadaRadViz>().DrawLinks(hit.collider.gameObject.GetComponentInChildren<PointData>().index);
+						plotterEada.GetComponent<EadaRadViz>().DrawLinks(hit.collider.gameObject.GetComponentInChildren<PointData>().index, hit.collider.gameObject.GetComponentInChildren<PointData>().fData, hit.collider.gameObject.transform.parent.gameObject);
+					}
 					if ( plotter.activeSelf )
 						plotter.GetComponent<RadVizPlotter>().DrawLinks(hit.collider.gameObject.GetComponentInChildren<PointData>().index);
 				}

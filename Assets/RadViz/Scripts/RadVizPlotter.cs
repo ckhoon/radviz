@@ -11,6 +11,7 @@ public class RadVizPlotter : MonoBehaviour {
 	public GameObject PointsHolder;
 	public GameObject AnchorsHolder;
 	public GameObject LinesHolder;
+	public GameObject OriginPt;
 	public float ptScale;
 
 	private static int spaceScale = 2;
@@ -31,7 +32,7 @@ public class RadVizPlotter : MonoBehaviour {
 		new Vector3()
 	};
 
-	private Vector3 Origin = new Vector3(spaceScale/2, spaceScale/2, spaceScale/2);
+	private Vector3 OldOrigin = new Vector3(spaceScale/2, spaceScale/2, spaceScale/2);
 
 	private string[] colName = new string[] {
 		"Sepal Length",
@@ -359,11 +360,13 @@ public class RadVizPlotter : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 
-		GameObject dataPoint = Instantiate(
-			PointPrefab,
-			Origin, Quaternion.identity
-		);
-		dataPoint.GetComponent<Renderer>().material.color = new Color(0, 0, 0);
+		//GameObject dataPoint = Instantiate(
+		//	PointPrefab,
+		//	Origin, Quaternion.identity
+		//);
+		//dataPoint.GetComponent<Renderer>().material.color = new Color(0, 0, 0);
+		
+		OriginPt.transform.position = new Vector3(spaceScale / 2, spaceScale / 2, spaceScale / 2);
 
 		loadAnchors();
 		drawPoints();
@@ -385,11 +388,15 @@ public class RadVizPlotter : MonoBehaviour {
 			}
 		}
 
+		if ( OldOrigin != OriginPt.transform.position )
+			redraw = true;
+
 		if ( redraw )
 		{
 			for ( int i = 0; i < anchorPts.Length; i++ )
 				oldAnchors[i] = anchorPts[i].transform.position;
 
+			OldOrigin = OriginPt.transform.position;
 			//clearPoints();
 			redrawPoints();
 		}
@@ -483,11 +490,11 @@ public class RadVizPlotter : MonoBehaviour {
 			Vector3 pos = new Vector3(0,0,0);
 			for ( int j = 0; j < anchorPts.Length; j++ )
 			{
-				v[j] = data[i][j] * ( anchorPts[j].transform.position - Origin );
+				v[j] = data[i][j] * ( anchorPts[j].transform.position - OriginPt.transform.position );
 				pos += v[j];
 			}
 			pos /= anchorPts.Length;
-			pos += Origin;
+			pos += OriginPt.transform.position;
 			GameObject dataPoint = Instantiate(
 				PointPrefab,
 				new Vector3(pos.x, pos.y, pos.z),
@@ -512,11 +519,11 @@ public class RadVizPlotter : MonoBehaviour {
 			Vector3 pos = new Vector3(0, 0, 0);
 			for ( int j = 0; j < anchorPts.Length; j++ )
 			{
-				v[j] = data[i][j] * ( anchorPts[j].transform.position - Origin );
+				v[j] = data[i][j] * ( anchorPts[j].transform.position - OriginPt.transform.position );
 				pos += v[j];
 			}
 			pos /= anchorPts.Length;
-			pos += Origin;
+			pos += OriginPt.transform.position;
 
 			PointsHolder.transform.GetChild(i).transform.position = pos;
 		}

@@ -12,7 +12,7 @@ public class LoadEadaData
 	static string LINE_SPLIT_RE = @"\r\n|\n\r|\n|\r"; // Define line delimiters, regular experession craziness
 	static char[] TRIM_CHARS = { '\"' };
 
-	private static int PERCENT = 50;
+	private static int PERCENT = 100;
 	private static float PERCENT_REC = 100 / PERCENT;
 
 	public static List<string> ReadHeader(string file, int colStart = 0)
@@ -59,6 +59,40 @@ public class LoadEadaData
 		return listData; //Return list
 	}
 
+	public static List<List<float>> ReadData(string file, int colStart = 0, int colSel = 0, List<string> strSel = null)
+	{
+		List<List<float>> listData = new List<List<float>>();
+		TextAsset txtData = Resources.Load(file) as TextAsset; //Loads the TextAsset named in the file argument of the function
+		var lines = Regex.Split(txtData.text, LINE_SPLIT_RE); // Split data.text into lines using LINE_SPLIT_RE characters
+		for ( var i = 1; i < lines.Length; i += (int)PERCENT_REC )
+		{
+			var values = Regex.Split(lines[i], SPLIT_RE); //Split lines according to SPLIT_RE, store in var (usually string array)
+			if ( values.Length == 0 || values[0] == "" )
+				continue; // Skip to end of loop (continue) if value is 0 length OR first value is empty
+
+			if ( strSel.Contains(values[colSel]) )
+			{
+				// Loops through every value
+				List<float> sublistData = new List<float>();
+				for ( var j = colStart; j < values.Length; j++ )
+				{
+					string value = values[j]; // Set local variable value
+					value = value.TrimStart(TRIM_CHARS).TrimEnd(TRIM_CHARS).Replace("\\", ""); // Trim characters
+					float f = new float(); // Create float, to hold value if float
+					if ( !float.TryParse(value, out f) )
+					{
+						Debug.Log("error reading data file, receive -> " + value);
+						return null;
+					}
+					sublistData.Add(f);
+				}
+				listData.Add(sublistData);
+			}
+
+		}
+		return listData; //Return list
+	}
+
 	public static List<string> ReadDetails(string file, int colStart = 0)
 	{
 		List<string> listData = new List<string>();
@@ -74,6 +108,24 @@ public class LoadEadaData
 		}
 		return listData; //Return list
 	}
+
+	public static List<string> ReadDetails(string file, int colStart = 0, int colSel = 0, List<string> strSel = null)
+	{
+		List<string> listData = new List<string>();
+		TextAsset txtData = Resources.Load(file) as TextAsset; //Loads the TextAsset named in the file argument of the function
+		var lines = Regex.Split(txtData.text, LINE_SPLIT_RE); // Split data.text into lines using LINE_SPLIT_RE characters
+		for ( var i = 1; i < lines.Length; i += (int)PERCENT_REC )
+		{
+			var values = Regex.Split(lines[i], SPLIT_RE); //Split lines according to SPLIT_RE, store in var (usually string array)
+			if ( values.Length == 0 || values[0] == "" )
+				continue; // Skip to end of loop (continue) if value is 0 length OR first value is empty
+
+			if ( strSel.Contains(values[colSel]) )
+				listData.Add(values[colStart]);
+		}
+		return listData; //Return list
+	}
+
 
 	public static List<bool> ReadFilter(string file, int colStart = 0)
 	{
