@@ -955,6 +955,7 @@ MonoBehaviour:
   inputfile: instLevel_mapped
   inputfile2015: instLevel2015_geo
   mapfile: mapping
+  corfile: corIndex
   ptScale: 0.04
   explodeScale: 1
   spaceScale: 4

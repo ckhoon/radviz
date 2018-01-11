@@ -20,6 +20,7 @@ public class EadaRadViz : MonoBehaviour {
 	public string inputfile;
 	public string inputfile2015;
 	public string mapfile;
+	public string corfile;
 	public float ptScale;
 	public int explodeScale = 5;
 	public int spaceScale = 5;
@@ -45,6 +46,7 @@ public class EadaRadViz : MonoBehaviour {
 	//private static float LINE_WIDTH = 0.08f;
 
 	private List<string> colName;
+	private List<string> corColName;
 	private List<string> listDetails;
 	private List<string> listClassification;
 	private List<string> listDetails2015;
@@ -63,6 +65,7 @@ public class EadaRadViz : MonoBehaviour {
 	private List<List<float>> dataNorm = new List<List<float>>();
 	private List<List<float>> data2015;
 	private List<List<float>> dataNorm2015 = new List<List<float>>();
+	private List<int> listCorIndex = new List<int>();
 	private bool hideColor = true;
 
 	// Use this for initialization
@@ -70,6 +73,7 @@ public class EadaRadViz : MonoBehaviour {
 	{
 		//Origin = new Vector3(spaceScale / 2.0f, spaceScale / 4.0f, spaceScale / 2.0f);
 		colName = LoadEadaData.ReadHeader(inputfile, COL_NUM);
+		corColName = LoadEadaData.ReadHeader(corfile, 0);
 		data = LoadEadaData.ReadData(inputfile, COL_NUM);
 		listDetails = LoadEadaData.ReadDetails(inputfile, 1);
 		listClassification = LoadEadaData.ReadDetails(inputfile, 10);
@@ -101,6 +105,7 @@ public class EadaRadViz : MonoBehaviour {
 		OriginPt.transform.position = new Vector3(spaceScale / 2.0f, spaceScale / 4.0f, spaceScale / 2.0f);
 		OldOrigin = new Vector3(spaceScale / 2.0f, spaceScale / 4.0f, spaceScale / 2.0f);
 
+		matchAchors();
 		loadAnchors();
 		drawPoints();
 		drawPoints(dataNorm2015, PointsHolder2015, PointPrefab2015, listDetails2015, listClassification2015);
@@ -175,6 +180,67 @@ public class EadaRadViz : MonoBehaviour {
 					continue;
 				PointsHolder2015.transform.GetChild(i).GetComponent<Renderer>().material.color = defaultColor2015;
 			}
+		}
+	}
+
+	public void ToggleAlpha(string strDetail)
+	{
+		if ( PointsHolder.activeSelf )
+		{
+			for ( int i = 0; i < PointsHolder.transform.childCount; i++ )
+			{
+				if ( !PointsHolder.transform.GetChild(i).GetComponent<PointData>() )
+					continue;
+				Color c = PointsHolder.transform.GetChild(i).GetComponent<Renderer>().material.color;
+				if ( PointsHolder.transform.GetChild(i).GetComponent<PointData>().details.Equals(strDetail) )
+				{
+					c.a = defaultColor.a;
+				}
+				else
+				{
+					c.a = 0.1f;
+				}
+				PointsHolder.transform.GetChild(i).GetComponent<Renderer>().material.color = c;
+			}
+		}
+
+		if ( PointsHolder2015.activeSelf )
+		{
+			for ( int i = 0; i < PointsHolder2015.transform.childCount; i++ )
+			{
+				if ( !PointsHolder2015.transform.GetChild(i).GetComponent<PointData>() )
+					continue;
+				Color c = PointsHolder2015.transform.GetChild(i).GetComponent<Renderer>().material.color;
+				if ( PointsHolder2015.transform.GetChild(i).GetComponent<PointData>().details.Equals(strDetail) )
+				{
+					c.a = defaultColor2015.a;
+				}
+				else
+				{
+					c.a = 0.1f;
+				}
+				PointsHolder2015.transform.GetChild(i).GetComponent<Renderer>().material.color = c;
+			}
+		}
+	}
+
+	public void ClearAlpha()
+	{
+		for ( int i = 0; i < PointsHolder.transform.childCount; i++ )
+		{
+			if ( !PointsHolder.transform.GetChild(i).GetComponent<PointData>() )
+				continue;
+			Color c = PointsHolder.transform.GetChild(i).GetComponent<Renderer>().material.color;
+			c.a = defaultColor.a;
+			PointsHolder.transform.GetChild(i).GetComponent<Renderer>().material.color = c;
+		}
+		for ( int i = 0; i < PointsHolder2015.transform.childCount; i++ )
+		{
+			if ( !PointsHolder2015.transform.GetChild(i).GetComponent<PointData>() )
+				continue;
+			Color c = PointsHolder2015.transform.GetChild(i).GetComponent<Renderer>().material.color;
+			c.a = defaultColor2015.a;
+			PointsHolder2015.transform.GetChild(i).GetComponent<Renderer>().material.color = c;
 		}
 	}
 
@@ -440,12 +506,12 @@ public class EadaRadViz : MonoBehaviour {
 	private void loadAnchors()
 	{
 		generateAnchors();
-		Debug.Log(" col number - " + colName.Count + " -- anchor number -" + Anchors.Count + " -- filter number -" + listFilter.Count);
+		Debug.Log(" col number - " + colName.Count + " -- anchor number -" + Anchors.Count + " -- filter number -" + listFilter.Count + " -- index number -" + listCorIndex.Count);
 		for ( int i = 0; i < colName.Count; i++ )
 		{
 			GameObject dataPoint = Instantiate(
 				AnchorPrefab,
-				new Vector3(Anchors[i].x, Anchors[i].y, Anchors[i].z),
+				new Vector3(Anchors[listCorIndex[i]].x, Anchors[listCorIndex[i]].y, Anchors[listCorIndex[i]].z),
 				Quaternion.identity
 			);
 			dataPoint.transform.parent = AnchorsHolder.transform;
@@ -492,45 +558,45 @@ public class EadaRadViz : MonoBehaviour {
 		float z = 0;
 
 		x = 0f;
-		y = 0;
-		for ( int row = 0; row < 6; row++ )
+		z = 0;
+		for ( int col = 0; col < 9; col++ )
 		{
-			z = 0;
-			for ( int col = 0; col < 9; col++ )
+			y = 0;
+			for ( int row = 0; row < 6; row++ )
 			{
 				Vector3 v = new Vector3(x * spaceScale, y * spaceScale, z * spaceScale);
 				Anchors.Add(v);
-				z += 0.112f;
+				y += 0.112f;
 			}
-			y += 0.112f;
+			z += 0.112f;
 		}
 
 		z = 1;
-		y = 0;
-		for ( int row = 0; row < 6; row++ )
+		x = 0f;
+		for ( int col = 0; col < 9; col++ )
 		{
-			x = 0f;
-			for ( int col = 0; col < 9; col++ )
+			y = 0;
+			for ( int row = 0; row < 6; row++ )
 			{
 				Vector3 v = new Vector3(x * spaceScale, y * spaceScale, z * spaceScale);
 				Anchors.Add(v);
-				x += 0.112f;
+				y += 0.112f;
 			}
-			y += 0.112f;
+			x += 0.112f;
 		}
 
 		x = 1f;
-		y = 0;
-		for ( int row = 0; row < 6; row++ )
+		z = 1f;
+		for ( int col = 0; col < 10; col++ )
 		{
-			z = 0;
-			for ( int col = 0; col < 10; col++ )
+			y = 0;
+			for ( int row = 0; row < 6; row++ )
 			{
 				Vector3 v = new Vector3(x * spaceScale, y * spaceScale, z * spaceScale);
 				Anchors.Add(v);
-				z += 0.112f;
+				y += 0.112f;
 			}
-			y += 0.112f;
+			z -= 0.112f;
 		}
 	}
 
@@ -804,6 +870,19 @@ public class EadaRadViz : MonoBehaviour {
 		for ( int i = holder.transform.childCount - 1; i >= 0; i-- )
 		{
 			Destroy(holder.transform.GetChild(i).gameObject);
+		}
+	}
+
+	void matchAchors()
+	{
+		foreach ( string strCor in colName )
+		{
+			int i = corColName.IndexOf(strCor);
+			if ( i == -1 )
+			{
+				Debug.Log("error - " + strCor);
+			}
+			listCorIndex.Add(i);
 		}
 	}
 	

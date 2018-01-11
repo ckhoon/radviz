@@ -153,6 +153,7 @@ public class WandInteractionMgr : MonoBehaviour {
 					{
 						//plotterEada.GetComponent<EadaRadViz>().DrawLinks(hit.collider.gameObject.GetComponentInChildren<PointData>().index);
 						plotterEada.GetComponent<EadaRadViz>().DrawLinks(hit.collider.gameObject.GetComponentInChildren<PointData>().index, hit.collider.gameObject.GetComponentInChildren<PointData>().fData, hit.collider.gameObject.transform.parent.gameObject);
+						plotterEada.GetComponent<EadaRadViz>().ToggleAlpha(hit.collider.gameObject.GetComponentInChildren<PointData>().details);
 					}
 					if ( plotter.activeSelf )
 						plotter.GetComponent<RadVizPlotter>().DrawLinks(hit.collider.gameObject.GetComponentInChildren<PointData>().index);
@@ -173,7 +174,10 @@ public class WandInteractionMgr : MonoBehaviour {
 			MenuCanvas.SetActive(false);
 			txtDetailCanvas.SetActive(false);
 			if ( plotterEada.activeSelf )
+			{
 				plotterEada.GetComponent<EadaRadViz>().ClearLinks();
+				plotterEada.GetComponent<EadaRadViz>().ClearAlpha();
+			}
 			if ( plotter.activeSelf )
 				plotter.GetComponent<RadVizPlotter>().ClearLinks();
 		}
