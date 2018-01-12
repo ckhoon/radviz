@@ -1,5 +1,4 @@
 ﻿using Avpl;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -12,15 +11,13 @@ public class WandInteractionMgr : MonoBehaviour {
 	public Avpl.InputKey button_select;
 	public Avpl.InputKey button_menu;
 	public Avpl.InputKey key_hideColor;
-	public Avpl.InputKey key_scaleUp;
-	public Avpl.InputKey key_scaleDown;
+	public Avpl.InputKey key_toggleAnchor;
 	public GameObject plotter;
 	public GameObject plotterEada;
 	public GameObject MenuCanvas;
 	public GameObject txtDetailCanvas;
 	public GameObject vrWand;
 	public Text txtDetails;
-
 
 	private int btnPressed = 0;
 	private bool dragged = false;
@@ -52,6 +49,12 @@ public class WandInteractionMgr : MonoBehaviour {
 					plotter.GetComponent<RadVizPlotter>().ToggleColor();
 				if ( plotterEada.activeSelf )
 					plotterEada.GetComponent<EadaRadViz>().ToggleColor();
+			}
+
+			if ( key_toggleAnchor.IsToggled() )
+			{
+				if ( plotterEada.activeSelf )
+					plotterEada.GetComponent<EadaRadViz>().ToggleAnchors();
 			}
 
 			if ( !dragHit )

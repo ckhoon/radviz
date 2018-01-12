@@ -67,6 +67,8 @@ public class EadaRadViz : MonoBehaviour {
 	private List<List<float>> dataNorm2015 = new List<List<float>>();
 	private List<int> listCorIndex = new List<int>();
 	private bool hideColor = true;
+	private bool corList = true;
+
 
 	// Use this for initialization
 	void Start()
@@ -96,18 +98,12 @@ public class EadaRadViz : MonoBehaviour {
 		listFilter = listFilterAll;
 		normalise();
 
-		//GameObject dataPoint = Instantiate(
-		//	PointPrefab,
-		//	Origin, Quaternion.identity
-		//);
-		//dataPoint.GetComponent<Renderer>().material.color = new Color(0, 0, 0);
-		//dataPoint.transform.localScale = new Vector3(ptScale, ptScale, ptScale);
 		OriginPt.transform.position = new Vector3(spaceScale / 2.0f, spaceScale / 4.0f, spaceScale / 2.0f);
 		OldOrigin = new Vector3(spaceScale / 2.0f, spaceScale / 4.0f, spaceScale / 2.0f);
 
 		matchAchors();
 		loadAnchors();
-		drawPoints();
+		drawPoints(dataNorm, PointsHolder, PointPrefab, listDetails, listClassification);
 		drawPoints(dataNorm2015, PointsHolder2015, PointPrefab2015, listDetails2015, listClassification2015);
 		DrawYearLinks();
 	}
@@ -138,7 +134,7 @@ public class EadaRadViz : MonoBehaviour {
 
 			OldOrigin = OriginPt.transform.position;
 			if ( PointsHolder.activeSelf )
-				redrawPoints();
+				redrawPoints(dataNorm, PointsHolder);
 			if ( PointsHolder2015.activeSelf )
 				redrawPoints(dataNorm2015, PointsHolder2015);
 			DrawYearLinks();
@@ -150,8 +146,6 @@ public class EadaRadViz : MonoBehaviour {
 		hideColor = !hideColor;
 		if ( !hideColor )
 		{
-			Debug.Log("i am here - " + PointsHolder.transform.childCount);
-			Debug.Log("i am here - " + PointsHolder2015.transform.childCount);
 			for ( int i = 0; i < PointsHolder.transform.childCount; i++ )
 			{
 				if ( !PointsHolder.transform.GetChild(i).GetComponent<PointData>() )
@@ -167,7 +161,6 @@ public class EadaRadViz : MonoBehaviour {
 		}
 		else
 		{
-			Debug.Log("i am there");
 			for ( int i = 0; i < PointsHolder.transform.childCount; i++ )
 			{
 				if ( !PointsHolder.transform.GetChild(i).GetComponent<PointData>() )
@@ -244,40 +237,6 @@ public class EadaRadViz : MonoBehaviour {
 		}
 	}
 
-	/*
-	public void DrawLinks(int index)
-	{
-		for ( int i = LinesHolder.transform.childCount - 1; i >= 0; i-- )
-		{
-			Destroy(LinesHolder.transform.GetChild(i).gameObject);
-		}
-
-		GameObject[] anchorPts = GameObject.FindGameObjectsWithTag("AnchorPoint");
-
-		for ( int j = 0; j < dataNorm[index].Count; j++ )
-		{
-			if ( dataNorm[index][j] != 0 )
-			{
-				if ( !listFilter[j] )
-					continue;
-
-				GameObject link = Instantiate(
-					LinePrefab,
-					Vector3.zero,
-					Quaternion.identity
-				);
-				link.GetComponent<LineRenderer>().SetPosition(0, anchorPts[j].transform.position);
-				link.GetComponent<LineRenderer>().SetPosition(1, PointsHolder.transform.GetChild(index).transform.position);
-				link.GetComponent<LineRenderer>().startWidth = dataNorm[index][j]* LINE_WIDTH;
-				link.GetComponent<LineRenderer>().endWidth = dataNorm[index][j] * LINE_WIDTH;
-				link.transform.parent = LinesHolder.transform;
-				//anchorPts[j].transform.position
-				//PointsHolder.transform.GetChild(index).transform.position;
-			}
-		}
-	}
-	*/
-
 	public void DrawLinks(int index, List<List<float>> fData, GameObject parentHolder)
 	{
 		for ( int i = LinesHolder.transform.childCount - 1; i >= 0; i-- )
@@ -286,10 +245,6 @@ public class EadaRadViz : MonoBehaviour {
 		}
 
 		GameObject[] anchorPts = GameObject.FindGameObjectsWithTag("AnchorPoint");
-
-		//List<List<float>> fData;
-
-		//Debug.Log("index - " + index + " count - " + fData[index].Count);
 
 		for ( int j = 0; j < fData[index].Count; j++ )
 		{
@@ -308,8 +263,6 @@ public class EadaRadViz : MonoBehaviour {
 				link.GetComponent<LineRenderer>().startWidth = fData[index][j] * LINE_WIDTH;
 				link.GetComponent<LineRenderer>().endWidth = fData[index][j] * LINE_WIDTH;
 				link.transform.parent = LinesHolder.transform;
-				//anchorPts[j].transform.position
-				//PointsHolder.transform.GetChild(index).transform.position;
 			}
 		}
 	}
@@ -342,7 +295,6 @@ public class EadaRadViz : MonoBehaviour {
 			{
 				if ( listDetails[i].Equals(listDetails2015[j]) )
 				{
-					//Debug.Log(listDetails[i] + " -- " + listDetails2015[j] + " *** " + i + " <-> " + j);
 					GameObject link = Instantiate(
 						YearLinePrefab,
 						Vector3.zero,
@@ -400,6 +352,7 @@ public class EadaRadViz : MonoBehaviour {
 				PointsHolder.SetActive(true);
 				PointsHolder2015.SetActive(true);
 				break;
+			// cd1 to cd6 is slow. need to optimise 
 			case "cd1":
 				data.Clear();
 				data2015.Clear();
@@ -410,7 +363,7 @@ public class EadaRadViz : MonoBehaviour {
 				listDetails2015 = LoadEadaData.ReadDetails(inputfile2015, 1, 10, new List<string>() { "1" });
 				listClassification2015 = LoadEadaData.ReadDetails(inputfile2015, 10, 10, new List<string>() { "1" });
 				normalise();
-				drawPoints();
+				drawPoints(dataNorm, PointsHolder, PointPrefab, listDetails, listClassification);
 				drawPoints(dataNorm2015, PointsHolder2015, PointPrefab2015, listDetails2015, listClassification2015);
 				break;
 			case "cd2":
@@ -423,7 +376,7 @@ public class EadaRadViz : MonoBehaviour {
 				listDetails2015 = LoadEadaData.ReadDetails(inputfile2015, 1, 10, new List<string>() { "2" });
 				listClassification2015 = LoadEadaData.ReadDetails(inputfile2015, 10, 10, new List<string>() { "2" });
 				normalise();
-				drawPoints();
+				drawPoints(dataNorm, PointsHolder, PointPrefab, listDetails, listClassification);
 				drawPoints(dataNorm2015, PointsHolder2015, PointPrefab2015, listDetails2015, listClassification2015);
 				break;
 			case "cd3":
@@ -436,7 +389,7 @@ public class EadaRadViz : MonoBehaviour {
 				listDetails2015 = LoadEadaData.ReadDetails(inputfile2015, 1, 10, new List<string>() { "3" });
 				listClassification2015 = LoadEadaData.ReadDetails(inputfile2015, 10, 10, new List<string>() { "3" });
 				normalise();
-				drawPoints();
+				drawPoints(dataNorm, PointsHolder, PointPrefab, listDetails, listClassification);
 				drawPoints(dataNorm2015, PointsHolder2015, PointPrefab2015, listDetails2015, listClassification2015);
 				break;
 			case "cd4":
@@ -449,7 +402,7 @@ public class EadaRadViz : MonoBehaviour {
 				listDetails2015 = LoadEadaData.ReadDetails(inputfile2015, 1, 10, new List<string>() { "4" });
 				listClassification2015 = LoadEadaData.ReadDetails(inputfile2015, 10, 10, new List<string>() { "4" });
 				normalise();
-				drawPoints();
+				drawPoints(dataNorm, PointsHolder, PointPrefab, listDetails, listClassification);
 				drawPoints(dataNorm2015, PointsHolder2015, PointPrefab2015, listDetails2015, listClassification2015);
 				break;
 			case "cd5":
@@ -462,7 +415,7 @@ public class EadaRadViz : MonoBehaviour {
 				listDetails2015 = LoadEadaData.ReadDetails(inputfile2015, 1, 10, new List<string>() { "5" });
 				listClassification2015 = LoadEadaData.ReadDetails(inputfile2015, 10, 10, new List<string>() { "5" });
 				normalise();
-				drawPoints();
+				drawPoints(dataNorm, PointsHolder, PointPrefab, listDetails, listClassification);
 				drawPoints(dataNorm2015, PointsHolder2015, PointPrefab2015, listDetails2015, listClassification2015);
 				break;
 			case "cd6":
@@ -475,7 +428,7 @@ public class EadaRadViz : MonoBehaviour {
 				listDetails2015 = LoadEadaData.ReadDetails(inputfile2015, 1);
 				listClassification2015 = LoadEadaData.ReadDetails(inputfile2015, 10);
 				normalise();
-				drawPoints();
+				drawPoints(dataNorm, PointsHolder, PointPrefab, listDetails, listClassification);
 				drawPoints(dataNorm2015, PointsHolder2015, PointPrefab2015, listDetails2015, listClassification2015);
 				break;
 			default:
@@ -484,7 +437,7 @@ public class EadaRadViz : MonoBehaviour {
 		}
 		reloadAnchors();
 		if (PointsHolder.activeSelf)
-			redrawPoints();
+			redrawPoints(dataNorm, PointsHolder);
 		if ( PointsHolder2015.activeSelf )
 			redrawPoints(dataNorm2015, PointsHolder2015);
 		DrawYearLinks();
@@ -496,12 +449,52 @@ public class EadaRadViz : MonoBehaviour {
 		listFilter[index] = !listFilter[index];
 		reloadAnchors();
 		if ( PointsHolder.activeSelf )
-			redrawPoints();
+			redrawPoints(dataNorm, PointsHolder);
 		if ( PointsHolder2015.activeSelf )
 			redrawPoints(dataNorm2015, PointsHolder2015);
 		DrawYearLinks();
 	}
 
+	public void ToggleAnchors()
+	{
+		clearPoints(AnchorsHolder);
+		corList = !corList;
+		Debug.Log(" col number - " + colName.Count + " -- anchor number -" + Anchors.Count + " -- filter number -" + listFilter.Count + " -- index number -" + listCorIndex.Count);
+		for ( int i = 0; i < colName.Count; i++ )
+		{
+			GameObject dataPoint;
+
+			if ( corList )
+			{
+				dataPoint = Instantiate(
+					AnchorPrefab,
+					new Vector3(Anchors[listCorIndex[i]].x, Anchors[listCorIndex[i]].y, Anchors[listCorIndex[i]].z),
+					Quaternion.identity
+				);
+			}
+			else
+			{
+				dataPoint = Instantiate(
+					AnchorPrefab,
+					new Vector3(Anchors[i].x, Anchors[i].y, Anchors[i].z),
+					Quaternion.identity
+				);
+			}
+			dataPoint.transform.parent = AnchorsHolder.transform;
+			dataPoint.GetComponentInChildren<Text>().text = colName[i];
+
+			Color c = dataPoint.GetComponentInChildren<Renderer>().material.color;
+			if ( !listFilter[i] )
+			{
+				c.a = 0.1f;
+			}
+			else
+			{
+				c.a = 0.8f;
+			}
+			dataPoint.GetComponentInChildren<Renderer>().material.color = c;
+		}
+	}
 
 	private void loadAnchors()
 	{
@@ -553,6 +546,7 @@ public class EadaRadViz : MonoBehaviour {
 
 	private void generateAnchors()
 	{
+		Anchors.Clear();
 		float x = 0;
 		float y = 0;
 		float z = 0;
@@ -599,7 +593,7 @@ public class EadaRadViz : MonoBehaviour {
 			z -= 0.112f;
 		}
 	}
-
+/*
 	private void drawPoints()
 	{
 		clearPoints(PointsHolder);
@@ -642,7 +636,7 @@ public class EadaRadViz : MonoBehaviour {
 			dataPoint.GetComponentInChildren<PointData>().fData = dataNorm;
 		}
 	}
-
+*/
 	private void drawPoints(List<List<float>> fData, GameObject holder, GameObject prefab, List<string> lDetails, List<string> lClassification)
 	{
 		clearPoints(holder);
@@ -685,7 +679,7 @@ public class EadaRadViz : MonoBehaviour {
 			dataPoint.GetComponentInChildren<PointData>().fData = fData;
 		}
 	}
-
+/*
 	private void redrawPoints()
 	{
 		GameObject[] anchorPts = GameObject.FindGameObjectsWithTag("AnchorPoint");
@@ -716,7 +710,7 @@ public class EadaRadViz : MonoBehaviour {
 			PointsHolder.transform.GetChild(i).transform.position = pos;
 		}
 	}
-
+*/
 	private void redrawPoints(List<List<float>> fData, GameObject holder)
 	{
 		GameObject[] anchorPts = GameObject.FindGameObjectsWithTag("AnchorPoint");
@@ -748,13 +742,12 @@ public class EadaRadViz : MonoBehaviour {
 		}
 	}
 
-
 	private void normalise()
 	{
 		List<float> max, min;
 		List<float> max2015, min2015;
-		max = getMax();
-		min = getMin();
+		max = getMax(data);
+		min = getMin(data);
 		max2015 = getMax(data2015);
 		min2015 = getMin(data2015);
 		dataNorm.Clear();
@@ -789,10 +782,8 @@ public class EadaRadViz : MonoBehaviour {
 			}
 			dataNorm2015.Add(sublistData);
 		}
-
-
 	}
-
+/*
 	List<float> getMax()
 	{
 		List<float> max = new List<float>();
@@ -811,7 +802,7 @@ public class EadaRadViz : MonoBehaviour {
 		}
 		return max;
 	}
-
+*/
 	List<float> getMax(List<List<float>> fData)
 	{
 		List<float> max = new List<float>();
@@ -830,7 +821,7 @@ public class EadaRadViz : MonoBehaviour {
 		}
 		return max;
 	}
-
+/*
 	List<float> getMin()
 	{
 		List<float> min = new List<float>();
@@ -847,7 +838,7 @@ public class EadaRadViz : MonoBehaviour {
 		}
 		return min;
 	}
-
+*/
 	List<float> getMin(List<List<float>> fData)
 	{
 		List<float> min = new List<float>();
